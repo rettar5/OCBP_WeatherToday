@@ -1,0 +1,14 @@
+{
+  "name": "weathertoday",
+  "version": "1.0.0",
+  "description": "",
+  "main": "weatherToday.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "rettar5",
+  "license": "MIT",
+  "dependencies": {
+    "forecast": "^0.3.2"
+  }
+}
