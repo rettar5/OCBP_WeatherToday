@@ -87,25 +87,29 @@ export class WeatherToday {
   }
 
   private tweetWeather(schedule: WeatherTodaySchedule, cb: (isSuccess: boolean) => void) {
-    WeatherToday.forecast.get(schedule.location.point, (error, weather) => {
+    WeatherToday.forecast.get(schedule.location.point, (error, weather: WeatherForcast) => {
       if (error) {
         Log.e("Error occurred at getting forecast resources.", error);
         return;
       }
 
+      /** ツイートする予報の間隔 */
       const inter = 3;
+      /** ツイートする予報の数 */
       const count = 8;
       let text = '';
 
-      if (inter * count < weather.hourly.data.length) {
-        const now = new Date(weather.currently.time * 1000);
+      if (inter * count < (weather?.hourly?.data?.length || 0)) {
+        const now = new Date(weather?.currently?.time * 1000);
         text += `${schedule.location.name}の天気予報\n\n`;
         // 3時間おきの天気
         for (let i = 0; i < count; i++) {
-          const data = weather.hourly.data[i * inter];
+          const data = weather?.hourly?.data?.[i * inter];
           const time = new Date(data.time * 1000);
+          const temp = Math.round(data.temperature);
+          const precipProbability = Math.round(data.precipProbability * 100);
           text += `${time.getHours()}時\n`;
-          text += `${this.getEmoji(data.icon)} ${Math.round(data.temperature)}℃ ${data.precipProbability * 100}％\n`;
+          text += `${this.getEmoji(data.icon)} ${temp}℃ ${precipProbability}％\n`;
           text += `\n`;
         }
       } else {
@@ -126,45 +130,9 @@ export class WeatherToday {
     });
   }
 
-  private getEmoji(icon: string): string {
+  private getEmoji(icon: WeatherIconTypes): string {
     // ☀️🌙🌧☃️🌨💨🌫☁️⛅️☁️
-    let emoji;
-    switch(icon) {
-      case "clear-day":
-        emoji = "☀️";
-        break;
-      case "clear-night":
-        emoji = "🌙";
-        break;
-      case "rain":
-        emoji = "🌧";
-        break;
-      case "snow":
-        emoji = "☃️";
-        break;
-      case "sleet":
-        emoji = "🌨";
-        break;
-      case "wind":
-        emoji = "💨";
-        break;
-      case "fog":
-        emoji = "🌫";
-        break;
-      case "cloudy":
-        emoji = "☁️";
-        break;
-      case "partly-cloudy-day":
-        emoji = "⛅️";
-        break;
-      case "partly-cloudy-night":
-        emoji = "☁️";
-        break;
-      default:
-        emoji = "❓";
-        break;
-    }
-    return emoji;
+    return WeatherIcons[icon] || '❓';
   }
 }
 
@@ -186,3 +154,89 @@ enum WeatherTodayEnvKey {
   Schedules = "SCHEDULES",
   ForecastKey = "FORECAST_KEY"
 }
+
+const WeatherIcons = {
+  'clear-day': '☀',
+  'clear-night': '🌙',
+  'rain': '🌧',
+  'snow': '☃',
+  'sleet': '🌨',
+  'wind': '💨',
+  'fog': '🌫',
+  'cloudy': '☁',
+  'partly-cloudy-day': '⛅',
+  'partly-cloudy-night': '☁'
+}
+
+interface WeatherForcast {
+  'currently': Weather;
+  'daily': {
+    'data': WeatherDetail[];
+    'icon': WeatherIconTypes;
+    'summary': string,
+  };
+  'expires': number;
+  'flags': {
+    'nearest-station': number;
+    'sources': string[];
+    'units': string;
+  };
+  'hourly': {
+    'data': Weather[];
+    'icon': WeatherIconTypes;
+    'summary': string,
+  }
+  'latitude': number;
+  'longitude': number;
+  'offset': number;
+  'timezone': string;
+}
+
+interface Weather {
+  'apparentTemperature': number;
+  'cloudCover': number;
+  'dewPoint': number;
+  'humidity': number;
+  'icon': WeatherIconTypes;
+  'ozone': number;
+  'precipIntensity': number;
+  'precipProbability': number;
+  'precipType': string;
+  'pressure': number;
+  'summary': string;
+  'temperature': number;
+  'time': number;
+  'uvIndex': number;
+  'visibility': number;
+  'windBearing': number;
+  'windGust': number;
+  'windSpeed': number;
+}
+
+interface WeatherDetail extends Weather {
+  "apparentTemperatureHigh": number;
+  "apparentTemperatureHighTime": number;
+  "apparentTemperatureLow": number;
+  "apparentTemperatureLowTime": number;
+  "apparentTemperatureMax": number;
+  "apparentTemperatureMaxTime": number;
+  "apparentTemperatureMin": number;
+  "apparentTemperatureMinTime": number;
+  "moonPhase": number;
+  "precipIntensityMax": number;
+  "precipIntensityMaxTime": number;
+  "sunriseTime": number;
+  "sunsetTime": number;
+  "temperatureHigh": number;
+  "temperatureHighTime": number;
+  "temperatureLow": number;
+  "temperatureLowTime": number;
+  "temperatureMax": number;
+  "temperatureMaxTime": number;
+  "temperatureMin": number;
+  "temperatureMinTime": number;
+  "uvIndexTime": number;
+  "windGustTime": number;
+}
+
+type WeatherIconTypes = 'clear-day' | 'clear-night' | 'rain' | 'snow' | 'sleet' | 'wind' | 'fog' | 'cloudy' | 'partly-cloudy-day' | 'partly-cloudy-night';
