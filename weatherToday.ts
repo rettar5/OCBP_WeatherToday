@@ -24,7 +24,10 @@ export class WeatherToday {
       this.nowDate,
       WeatherToday.scheduleList
     );
-    Log.d('schedules: ', schedules.map(s => s.screenName).join(','));
+    Log.d(
+      'schedules: ',
+      schedules.map(s => `${s.screenName}:${s.location.name}`).join(', ')
+    );
     const promiseList = schedules.map(schedule => {
       return new Promise((res, rej) => {
         this.tweetWeather(schedule, isSuccess => {
@@ -42,6 +45,7 @@ export class WeatherToday {
         finish(true);
       })
       .catch(e => {
+        Log.w('Error occurred.', e);
         finish(false);
       });
   }
